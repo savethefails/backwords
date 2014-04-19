@@ -3,12 +3,15 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-coffee')
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-contrib-clean')
+  grunt.loadNpmTasks('grunt-contrib-connect')
 
   grunt.initConfig
     watch:
       coffee:
         files: 'src/*.coffee'
         tasks: ['clean:js', 'coffee:compile']
+        options:
+          livereload: true
 
     coffee:
       compile:
@@ -26,6 +29,16 @@ module.exports = (grunt) ->
       js:
         src: ['js']
 
+    connect:
+      server:
+        options:
+          port: 4000,
+          base: '',
+          hostname: '*'
+       
+     
+
+
   grunt.registerTask 'default',
     'Watches the project for changes, automatically build them',
-    ['clean', 'coffee:compile', 'watch']
+    ['clean', 'coffee:compile', 'connect', 'watch']
