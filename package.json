@@ -1,0 +1,8 @@
+{
+  "name": "Backwords",
+  "description": "",
+  "author": "Brett Bergmann",
+  "dependencies": {
+    "grunt": "0.x.x"
+  }
+}
