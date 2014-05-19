@@ -1,7 +1,8 @@
 
 class Reverser
   volume: 0
-  tries: 10
+  tries: 200
+  triesDelay: 500
   size: 8192 # sizes:  256, 512, 1024, 2048, 4096, 8192 or 16384
 
   constructor: (@audioContext) ->
@@ -55,7 +56,7 @@ class Reverser
     else
       if @tries > 0
         @tries--
-        setTimeout @play, 100
+        setTimeout @play, @triesDelay
       else
         alert('Could not get audio stream')
 
