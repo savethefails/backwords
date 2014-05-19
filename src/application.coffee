@@ -2,7 +2,7 @@
 class Reverser
   volume: 0
   tries: 10
-  size: 5 # 6 is the max
+  size: 8192 # sizes:  256, 512, 1024, 2048, 4096, 8192 or 16384
 
   constructor: (@audioContext) ->
     @getUserMedia audio: true
@@ -22,22 +22,19 @@ class Reverser
     e = audioProcessingEvent
     audioIn = e.inputBuffer.getChannelData(0)
     audioOut = e.outputBuffer.getChannelData(0)
-    Array.prototype.reverse.call audioIn # from: http://stackoverflow.com/a/10973392
-
-    for sample in [0..audioIn.length-1]
-      audioOut[sample] = audioIn[sample] * @volume
+    sampleSize = @size-1
+    for i in [0..sampleSize]
+      audioOut[i] = audioIn[sampleSize - i]
 
   gotStream: (stream) =>
     # Create an AudioNode from the stream.
     @mediaStreamSource = @audioContext.createMediaStreamSource stream
 
-  play: (size = @size) =>
-    size = Math.pow(2, size) * 256
+  play: (size) =>
+    @size = Math.pow(2, size) * 256 if size?
     if @mediaStreamSource?
       @reset()
       # see: https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode
-      # sizes:  256, 512, 1024, 2048, 4096, 8192 or 16384
-      @processor = @audioContext.createScriptProcessor(size, 1, 1)
 
       # process using the reverser when the input buffer is full
       @processor.onaudioprocess = @reverser
