@@ -35,6 +35,9 @@ class Reverser
     if @mediaStreamSource?
       @reset()
       # see: https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode
+      @processor = @audioContext.createScriptProcessor(@size, 1, 1)
+      @gainNode = @audioContext.createGain()
+      @gainNode.gain.value = 0
 
       # process using the reverser when the input buffer is full
       @processor.onaudioprocess = @reverser
@@ -42,10 +45,13 @@ class Reverser
       # connect mic stream -> processor (it will fire off an event when its buffer is full)
       @mediaStreamSource.connect @processor
 
-      # connect processor -> speaker output
-      @processor.connect @audioContext.destination
+       # connect processor -> volume node
+      @processor.connect @gainNode
 
-      @increaseVolume()
+      # volume node -> speaker output
+      @gainNode.connect @audioContext.destination
+
+      @changeVolume()
     else
       if @tries > 0
         @tries--
@@ -53,9 +59,9 @@ class Reverser
       else
         alert('Could not get audio stream')
 
-  reset: ->
+  reset: ()->
     return unless @processor? and @mediaStreamSource?
-    @volume = 0
+    @changeVolume(0, 0, 0)
     @processor.onaudioprocess = null
     @processor.disconnect()
     @mediaStreamSource.disconnect()
@@ -63,10 +69,10 @@ class Reverser
     delete @processor
     @tries = 10
 
-  increaseVolume: =>
-    if @volume < 1
-      @volume += 0.1
-      setTimeout @increaseVolume, 100
+  changeVolume: (start = 0, end = 1, time = 5) =>
+    currentTime = @audioContext.currentTime;
+    @gainNode.gain.linearRampToValueAtTime(start, currentTime)
+    @gainNode.gain.linearRampToValueAtTime(end, currentTime + time)
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext
 
