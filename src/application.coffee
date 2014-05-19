@@ -1,8 +1,6 @@
 
 class Reverser
   volume: 0
-  tries: 200
-  triesDelay: 500
   size: 8192 # sizes:  256, 512, 1024, 2048, 4096, 8192 or 16384
 
   constructor: (@audioContext) ->
@@ -30,35 +28,29 @@ class Reverser
   gotStream: (stream) =>
     # Create an AudioNode from the stream.
     @mediaStreamSource = @audioContext.createMediaStreamSource stream
+    @play()
 
   play: (size) =>
     @size = Math.pow(2, size) * 256 if size?
-    if @mediaStreamSource?
-      @reset()
-      # see: https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode
-      @processor = @audioContext.createScriptProcessor(@size, 1, 1)
-      @gainNode = @audioContext.createGain()
-      @gainNode.gain.value = 0
+    @reset()
+    # see: https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode
+    @processor = @audioContext.createScriptProcessor(@size, 1, 1)
+    @gainNode = @audioContext.createGain()
+    @gainNode.gain.value = 0
 
-      # process using the reverser when the input buffer is full
-      @processor.onaudioprocess = @reverser
+    # process using the reverser when the input buffer is full
+    @processor.onaudioprocess = @reverser
 
-      # connect mic stream -> processor (it will fire off an event when its buffer is full)
-      @mediaStreamSource.connect @processor
+    # connect mic stream -> processor (it will fire off an event when its buffer is full)
+    @mediaStreamSource.connect @processor
 
-       # connect processor -> volume node
-      @processor.connect @gainNode
+     # connect processor -> volume node
+    @processor.connect @gainNode
 
-      # volume node -> speaker output
-      @gainNode.connect @audioContext.destination
+    # volume node -> speaker output
+    @gainNode.connect @audioContext.destination
 
-      @changeVolume()
-    else
-      if @tries > 0
-        @tries--
-        setTimeout @play, @triesDelay
-      else
-        alert('Could not get audio stream')
+    @changeVolume()
 
   reset: ()->
     return unless @processor? and @mediaStreamSource?
@@ -78,5 +70,4 @@ class Reverser
 window.AudioContext = window.AudioContext || window.webkitAudioContext
 
 reverser = new Reverser new AudioContext()
-reverser.play()
 
