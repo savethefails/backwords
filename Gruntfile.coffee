@@ -10,7 +10,7 @@ module.exports = (grunt) ->
     watch:
       coffee:
         files: 'src/*.coffee'
-        tasks: ['clean:js', 'coffee:compile']
+        tasks: ['clean:default', 'coffee:compile']
         options:
           livereload: true
 
