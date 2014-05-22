@@ -1,7 +1,6 @@
 
 class Reverser
   volume: 0
-  size: 8192 # sizes:  256, 512, 1024, 2048, 4096, 8192 or 16384
 
   constructor: (@audioContext) ->
     @getUserMedia audio: true
@@ -19,55 +18,87 @@ class Reverser
 
   reverser: (audioProcessingEvent) =>
     e = audioProcessingEvent
-    audioIn = e.inputBuffer.getChannelData(0)
     audioOut = e.outputBuffer.getChannelData(0)
-    sampleSize = @size-1
-    for i in [0..sampleSize]
-      audioOut[i] = audioIn[sampleSize - i]
+    audioIn  = e.inputBuffer.getChannelData(0)
+    for i in [0..@sampleSize]
+      audioOut[i] = audioIn[@sampleSize - i]
 
   gotStream: (stream) =>
-    # Create an AudioNode from the stream.
-    @mediaStreamSource = @audioContext.createMediaStreamSource stream
+    @stream = stream
     @play()
 
-  play: (size) =>
-    @size = Math.pow(2, size) * 256 if size?
+  play: (size = 6) =>
+    @sampleSize = Math.pow(2, size) * 256
     @reset()
-    # see: https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode
-    @processor = @audioContext.createScriptProcessor(@size, 1, 1)
-    @gainNode = @audioContext.createGain()
-    @gainNode.gain.value = 0
 
+    @createNodes()
+    @connectNodes()
+
+  createNodes: =>
+    # Create an AudioNode from the stream.
+    @mediaStreamSource ?= @audioContext.createMediaStreamSource @stream
+
+    # see: https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode
+    @processor = @audioContext.createScriptProcessor(@sampleSize, 1, 1)
     # process using the reverser when the input buffer is full
     @processor.onaudioprocess = @reverser
 
+    @mixerGain ?= @audioContext.createGain()
+    @mixerGain.gain.value = 0
+
+    @wetGain ?= @audioContext.createGain()
+    @wetGain.gain.value = 0
+
+    @dryGain ?= @audioContext.createGain()
+    @dryGain.gain.value = 1
+
+  connectNodes: =>
     # connect mic stream -> processor (it will fire off an event when its buffer is full)
     @mediaStreamSource.connect @processor
 
-     # connect processor -> volume node
-    @processor.connect @gainNode
+     # connect processor -> wet volume node
+    @processor.connect @wetGain
 
-    # volume node -> speaker output
-    @gainNode.connect @audioContext.destination
+    # wet volume -> mixer volume
+    @wetGain.connect @mixerGain
 
-    @changeVolume()
+    # mic stream -> dry volume
+    @mediaStreamSource.connect @dryGain
+
+    # dry volume to mixer volume
+    @dryGain.connect @mixerGain
+
+    # mixer volume -> speaker output
+    @mixerGain.connect @audioContext.destination
+
+    @changeVolume(1, 0.1)
+    @crossFade(@dryGain, @wetGain, 0)
 
   reset: ()->
-    return unless @processor? and @mediaStreamSource?
-    @changeVolume(0, 0, 0)
-    @processor.onaudioprocess = null
-    @processor.disconnect()
-    @mediaStreamSource.disconnect()
-    @processor = null
-    delete @processor
-    @tries = 10
+    return unless @mixerGain?
+    @changeVolume(0, 0)
+    if @processor?
+      @processor.onaudioprocess = null
+      @processor.disconnect()
+      @processor = null
+    if @mediaStreamSource?
+      @mediaStreamSource.disconnect()
 
-  changeVolume: (start = 0, end = 1, time = 5) =>
-    currentTime = @audioContext.currentTime;
-    @gainNode.gain.linearRampToValueAtTime(start, currentTime)
-    @gainNode.gain.linearRampToValueAtTime(end, currentTime + time)
+    delete @processor
+
+  changeVolume: (value = 1, delay = 1, node = @mixerGain, ramp = 'linearRampToValueAtTime') =>
+      currentTime = @audioContext.currentTime
+      node.gain[ramp](node.gain.value, currentTime)
+      node.gain[ramp](value, currentTime + delay)
+
+  crossFade: (quieteningNode, loudeningNode, delay = 1) =>
+    return unless quieteningNode? and loudeningNode?
+    @changeVolume(0, delay, quieteningNode)
+    @changeVolume(1, delay, loudeningNode)
+
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext
 
 reverser = new Reverser new AudioContext()
+
 
