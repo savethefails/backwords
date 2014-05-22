@@ -27,7 +27,9 @@ class Reverser
     @stream = stream
     @play()
 
-  play: (size = 6) =>
+  play: (size = 5) =>
+    size = 6 if size > 6
+    size = 4 if size < 4
     @sampleSize = Math.pow(2, size) * 256
     @reset()
 
