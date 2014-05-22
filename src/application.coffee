@@ -28,6 +28,7 @@ class Reverser
   gotStream = (_stream) =>
     stream = _stream
     start()
+    $('body').addClass('started')
 
   start = (size = 5) =>
     size = 6 if size > 6
@@ -76,7 +77,6 @@ class Reverser
     mixerGain.connect audioContext.destination
 
     changeVolume(1, 0.1, mixerGain)
-    crossFade(dryGain, wetGain, 0)
 
   reset = ->
     return unless mixerGain?
@@ -107,6 +107,36 @@ class Reverser
 
   play: -> start.apply @, arguments
 
-reverser = new Reverser()
+  reversify: ->
+    crossFade(dryGain, wetGain, 5)
+    return true
+
+  normalize: ->
+    crossFade(wetGain, dryGain, 1)
+    return true
+
+
+$ ->
+  reverser = null
+  $('#start').click (e) ->
+    e.preventDefault()
+    return if reverser?
+    reverser = new Reverser()
+    return false
+
+  $('#reverse-control').click (e) ->
+    e.preventDefault()
+    el = $(this)
+    reversified = el.hasClass('on')
+
+    el.toggleClass('on', !reversified)
+
+    if reversified
+      reverser.normalize()
+    else
+      reverser.reversify()
+
+
+    return false
 
 

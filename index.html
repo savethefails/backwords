@@ -1,9 +1,37 @@
 <html>
   <head>
-    
+    <style>
+      body {
+        font-size: 32px;
+        padding: 1em;
+        text-align: center;
+      }
+      a, a:visited{
+        text-decoration: none;
+        color: black;
+      }
+      body.started #reverse-control{
+        display:block;
+      }
+      body.started #start{
+        display: none;
+      }
+      #reverse-control{ display: none; }
+      #reverse-control a:before{
+        content: 'Reversify'
+      }
+      #reverse-control.on a:before{
+        content: 'Normalize'
+      }
+    </style>
   </head>
   <body>
-
+    <div id='start'>
+      <a href="">Start</a>
+    </div>
+    <div id='reverse-control'>
+      <a href=""></a>
+    </div>
     <script src='lib/jquery-2.1.0.min.js'></script>
     <script src='js/application.js'></script>
   </body>
