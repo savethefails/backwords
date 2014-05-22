@@ -98,15 +98,15 @@ class Reverser
     changeVolume(0, delay, quieteningNode)
     changeVolume(1, delay, loudeningNode)
 
-  constructor: (_audioContext) ->
-    audioContext = _audioContext
+  constructor: ->
+    AudioContextClass = window.AudioContext || window.webkitAudioContext
+    audioContext = new AudioContextClass()
     getUserMedia audio: true, gotStream
 
   pause: -> reset.apply @, arguments
 
   play: -> start.apply @, arguments
 
-window.AudioContext = window.AudioContext || window.webkitAudioContext
-reverser = new Reverser new AudioContext()
+reverser = new Reverser()
 
 
