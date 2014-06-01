@@ -1,5 +1,7 @@
 node_modules
-application.js
+src
 references
-application.css
+lib
+Gruntfile.coffee
+package.json
 .sass-cache/*
