@@ -5,6 +5,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-clean')
   grunt.loadNpmTasks('grunt-contrib-connect')
   grunt.loadNpmTasks('grunt-contrib-copy')
+  grunt.loadNpmTasks('grunt-contrib-concat')
 
   grunt.initConfig
     watch:
@@ -24,13 +25,19 @@ module.exports = (grunt) ->
         ext: '.js'
       options:
         bare: true
-        sourceMap: true
+        sourceMap: false
 
     clean:
-      default:
-        src: ['js', './application.js']
-      ghPages:
-        src: ['js', 'lib', './application.js.map']
+      js:
+        src: ['js']
+      app:
+        src: ['./application.js']
+
+
+    concat:
+        squash:
+          src: ['lib/jquery-2.1.0.min.js', 'js/reverser.js', 'js/ui.js']
+          dest: './application.js'
 
     connect:
       server:
@@ -39,22 +46,15 @@ module.exports = (grunt) ->
           base: '',
           hostname: '*'
 
-    copy:
-      flatten:
-        files: [
-          # flattens results to a single level
-          expand: true
-          flatten: true
-          src: ['js/**', 'lib/**']
-          dest: './'
-          filter: 'isFile'
-        ]
-
 
   grunt.registerTask 'default',
-    'Watches the project for changes, automatically build them',
-    ['clean:default', 'coffee:compile', 'connect', 'watch']
+    'cleans, compiles, squashes',
+    ['clean:js', 'clean:app', 'coffee:compile', 'concat:squash', 'clean:js']
 
-  grunt.registerTask 'gh-pages',
-    'moves files into root for gh-pages setup',
-    ['clean:default', 'coffee:compile', 'copy:flatten', 'clean:ghPages']
+  grunt.registerTask 'development',
+  'runs tasks for dev environment',
+  ['default', 'server']
+
+  grunt.registerTask 'server',
+  'creates server and watches',
+  ['connect', 'watch']
