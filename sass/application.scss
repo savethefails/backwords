@@ -1,0 +1,22 @@
+body {
+  font-size: 32px;
+  padding: 1em;
+  text-align: center;
+}
+a, a:visited{
+  text-decoration: none;
+  color: black;
+}
+body.started #reverse-control{
+  display:block;
+}
+body.started #start{
+  display: none;
+}
+#reverse-control{ display: none; }
+#reverse-control a:before{
+  content: 'Reversify'
+}
+#reverse-control.on a:before{
+  content: 'Normalize'
+}

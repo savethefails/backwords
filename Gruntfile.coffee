@@ -6,6 +6,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-connect')
   grunt.loadNpmTasks('grunt-contrib-copy')
   grunt.loadNpmTasks('grunt-contrib-concat')
+  grunt.loadNpmTasks('grunt-contrib-sass')
 
   grunt.initConfig
     watch:
@@ -31,7 +32,7 @@ module.exports = (grunt) ->
       js:
         src: ['js']
       app:
-        src: ['./application.js']
+        src: ['./application.js', './application.css']
 
 
     concat:
@@ -46,10 +47,17 @@ module.exports = (grunt) ->
           base: '',
           hostname: '*'
 
+     sass:
+      dist:
+        options:
+          style: 'expanded'
+        files:
+          'application.css': 'sass/application.scss'
+
 
   grunt.registerTask 'default',
     'cleans, compiles, squashes',
-    ['clean:js', 'clean:app', 'coffee:compile', 'concat:squash', 'clean:js']
+    ['clean:js', 'clean:app', 'coffee:compile', 'concat:squash', 'sass:dist', 'clean:js']
 
   grunt.registerTask 'development',
   'runs tasks for dev environment',
